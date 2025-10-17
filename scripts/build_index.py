@@ -35,7 +35,10 @@ def main(args: argparse.Namespace) -> None:
     res_dir = Path(cfg["paths"]["results_dir"])
     res_dir.mkdir(parents=True, exist_ok=True)
 
-    meta = io.load_metadata(str(data_root))
+    # NEW: allow custom CSV via config (defaults to 'metadata.csv')
+    csv_name = cfg["paths"].get("csv_name", "metadata.csv")
+    meta = io.load_metadata(str(data_root), csv_name=csv_name)
+
     split = cfg.get("data", {}).get("split")
     if split:
         meta = meta[meta["split"] == split].copy()
@@ -81,7 +84,11 @@ def main(args: argparse.Namespace) -> None:
             ids_df[col] = meta[col].values
     ids_df.to_parquet(res_dir / "ids.parquet", index=False)
 
-    fa = index.FaissIndex(dim=embs.shape[1], kind=cfg.get("index", {}).get("kind", "flat"), metric=cfg.get("index", {}).get("metric", "ip"))
+    fa = index.FaissIndex(
+        dim=embs.shape[1],
+        kind=cfg.get("index", {}).get("kind", "flat"),
+        metric=cfg.get("index", {}).get("metric", "ip"),
+    )
     fa.add(embs)
     fa.save(res_dir / "index.faiss")
 

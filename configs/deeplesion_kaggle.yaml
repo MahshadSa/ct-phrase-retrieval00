@@ -1,0 +1,66 @@
+seed: 42
+
+runtime:
+  device: auto
+
+paths:
+  data_root: "/data/deeplesion_kaggle"
+  results_dir: "results/kaggle_v1"
+
+data:
+  split: "test"
+  max_samples: 5000
+
+preprocess:
+  input_size: 224
+  normalize: "clip"
+  use_ct3ch: true
+
+model:
+  backend: "openclip"
+  image_encoder: "ViT-B/16"
+  text_encoder: "ViT-B/16"
+  pretrained: "openai"
+  embed_dim: 512
+  dtype: "fp16"
+
+index:
+  kind: "flat"
+  metric: "ip"
+  nlist: 4096
+  nprobe: 16
+
+retrieval:
+  k: 10
+  group_by_study: true
+  eval_topk_build: 100
+
+cam:
+  method: "vit_gradcam"
+  threshold: 0.5
+  input_size: 224
+  alpha: 0.5
+
+phrases:
+  set:
+    - "liver lesion"
+    - "renal mass"
+    - "splenic lesion"
+    - "lung nodule"
+    - "enlarged lymph node"
+    - "bone lesion"
+
+viz:
+  panel_rows: 3
+  panel_cols: 3
+  gif_seconds: 15
+  cam_alpha: 0.5
+
+batch: 64
+
+logging:
+  level: "INFO"
+
+notes: |
+  Baseline OpenCLIP ViT-B/16 on Kaggle DeepLesion subset.
+  CT 3-window → CLIP norm; FAISS Flat IP; saliency overlay.

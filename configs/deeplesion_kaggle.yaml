@@ -4,8 +4,9 @@ runtime:
   device: auto
 
 paths:
-  data_root: "/data/deeplesion_kaggle"
-  results_dir: "results/kaggle_v1"
+  data_root: "/kaggle/input/nih-deeplesion-subset"
+  results_dir: "/kaggle/working/results/kaggle_v1"
+  csv_name: "DL_info.csv"
 
 data:
   split: "test"

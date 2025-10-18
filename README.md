@@ -44,7 +44,7 @@ paths:
   results_dir: /kaggle/working/results/kaggle_v1
 ```
 
-**Troubleshooting**
+### Troubleshooting
 
 * `ImportError: cannot import 'pgr_dl'` → Run `pip install -e .` and ensure `src/pgr_dl/__init__.py` exists.
 * `FileNotFoundError: DL_info.csv` → Add the dataset in Kaggle *Add data* or edit the YAML `paths.csv_name`.
@@ -94,6 +94,23 @@ Then it renders here:
 
 ---
 
+## CLIP Results
+
+**CLIP Build (ViT-B/16, Zero-Shot Phrase Retrieval)**
+
+Running `scripts/build_index_clip.py` with `encoder.limit_n = 512` produced:
+
+```
+/kaggle/working/results/kaggle_clip/
+ ├── index.faiss            # FAISS Flat/IP index
+ ├── image_embs.npy         # (n=512, dim=512) ViT-B/16 embeddings
+ ├── ids.parquet            # slice ↔ file mapping
+ ├── manifest.json          # {"n":512, "dim":512, "metric":"ip", "kind":"flat"}
+ └── panel_<phrase>.csv     # top-k ranked slices (zero-shot, semantic)
+```
+
+---
+
 ## Honest limits & next steps
 
 **Deliberately minimal** to stay teachable:
@@ -106,18 +123,61 @@ Then it renders here:
 
 * IVF‑PQ index for scale, plus saliency‑aware re‑ranking.
 * Organ‑specific phrase banks and harder negatives.
-* A proper grounding head (e.g., ViT token maps or a tiny detector), and basic pointing‑accuracy metrics.
+* A proper grounding head (e.g., ViT token maps or a tiny detector) and basic pointing‑accuracy metrics.
 
 ---
 
 ## Acknowledgements
 
-* **DeepLesion** dataset (NIH).
-* **FAISS** (Meta AI) for nearest‑neighbour search.
-* **OpenCLIP** for CLIP‑style encoders.
+* **DeepLesion** dataset (NIH)
+* **FAISS** (Meta AI) for nearest‑neighbour search
+* **OpenCLIP** for CLIP‑style encoders
 
 ---
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE)
+
+---
+
+## Expected artifacts (toy run)
+
+```
+/kaggle/working/results/kaggle_v1/
+ ├── index.faiss
+ ├── image_embs.npy           # (n≈512, dim=256 in offline toy run)
+ ├── ids.parquet
+ ├── panel_<phrase>.csv       # top-k hits for a query phrase
+ └── manifest.json            # {"n":512,"dim":256,"metric":"ip","kind":"flat"}
+```
+
+---
+
+## Switch from toy → OpenCLIP
+
+Build with real CLIP embeddings (enable internet or set `weights_path` in YAML):
+
+```bash
+python scripts/build_index_clip.py --config configs/deeplesion_kaggle.yaml
+```
+
+**Results (CLIP build)**
+
+```
+/kaggle/working/results/kaggle_clip/
+ ├── index.faiss
+ ├── image_embs.npy     # n=512, dim=512 (ViT-B/16)
+ ├── ids.parquet
+ ├── panel_<phrase>.csv
+ └── manifest.json      # {"n":512,"dim":512,"metric":"ip","kind":"flat",...}
+```
+
+**Reproduce**
+
+```bash
+python scripts/build_index_clip.py --config configs/deeplesion_kaggle.yaml
+
+# Query example (saves panel CSV)
+python apps/query.py --results_dir /kaggle/working/results/kaggle_clip --phrase "liver lesion" -k 9 --save_panel
+```

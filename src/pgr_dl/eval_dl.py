@@ -19,7 +19,7 @@ def recall_at_k(results: pd.DataFrame, k: int = 5) -> float:
     Returns:
       Recall@k in [0,1], or NaN if no queries.
     """
-    if "query_phrase" not in results or "is_positive" not in results:
+    if "query_phrase" not in results.columns or "is_positive" not in results.columns:
         raise ValueError("results must include 'query_phrase' and 'is_positive' columns")
 
     # Sort within each query if rank hints exist; otherwise keep current order
@@ -102,3 +102,12 @@ def recall_at_k_study_level(results: pd.DataFrame, k: int = 5) -> float:
     if not hits:
         return float("nan")
     return float(np.mean(hits))
+def mark_positives(hits: pd.DataFrame) -> pd.DataFrame:
+    if {"query_phrase","body_part","lesion_type"}.issubset(hits.columns):
+        hits = hits.copy()
+        hits["is_positive"] = [
+            tags_match_phrase(b, l, p)
+            for p, b, l in zip(hits["query_phrase"], hits["body_part"], hits["lesion_type"])
+        ]
+        return hits
+    return hits

@@ -9,19 +9,24 @@ except Exception:
     open_clip = None
 
 
+def _normalize_model_name(name: str) -> str:
+    # OpenCLIP uses dashes, not slashes (e.g., "ViT-B-16")
+    return name.replace("ViT-B/16", "ViT-B-16")
+
+
 class ClipEncoder:
     """OpenCLIP wrapper producing L2-normalized (image,text) embeddings."""
 
     def __init__(
         self,
-        model_name: str = "ViT-B/16",
+        model_name: str = "ViT-B-16",
         device: str | torch.device = "cpu",
         pretrained: str = "openai",
         dtype: torch.dtype = torch.float16,
     ) -> None:
         if open_clip is None:
             raise ImportError("Install open-clip-torch")
-        self.model_name = model_name
+        self.model_name = _normalize_model_name(model_name)
         self.device = torch.device(device)
         self.pretrained = pretrained
         self.dtype = dtype
@@ -53,10 +58,11 @@ class ClipEncoder:
             raise ValueError("imgs must be (B,3,H,W)")
         imgs = imgs.to(self.device, non_blocking=True)
         use_amp = self.device.type == "cuda" and self.dtype in (torch.float16, torch.bfloat16)
-        feats = (
-            self.model.encode_image(imgs) if not use_amp
-            else torch.autocast(device_type="cuda", dtype=self.dtype)(self.model.encode_image)(imgs)  # type: ignore
-        )
+        if use_amp:
+            with torch.autocast(device_type="cuda", dtype=self.dtype):
+                feats = self.model.encode_image(imgs)
+        else:
+            feats = self.model.encode_image(imgs)
         if feats.ndim != 2:
             raise RuntimeError("encode_image must return (B, D)")
         return F.normalize(feats.float(), dim=-1)
@@ -68,10 +74,15 @@ class ClipEncoder:
             raise ValueError("texts must be non-empty")
         toks = self.tokenizer(texts).to(self.device, non_blocking=True)
         use_amp = self.device.type == "cuda" and self.dtype in (torch.float16, torch.bfloat16)
-        feats = (
-            self.model.encode_text(toks) if not use_amp
-            else torch.autocast(device_type="cuda", dtype=self.dtype)(self.model.encode_text)(toks)  # type: ignore
-        )
+        if use_amp:
+            with torch.autocast(device_type="cuda", dtype=self.dtype):
+                feats = self.model.encode_text(toks)
+        else:
+            feats = self.model.encode_text(toks)
         if feats.ndim != 2:
             raise RuntimeError("encode_text must return (B, D)")
         return F.normalize(feats.float(), dim=-1)
+
+    # alias to match apps
+    def encode_text(self, texts: List[str]) -> torch.Tensor:
+        return self.encode_texts(texts)

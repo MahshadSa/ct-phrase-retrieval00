@@ -1,46 +1,31 @@
 seed: 42
 
-runtime:
-  device: auto
-
 paths:
   data_root: "/kaggle/input/nih-deeplesion-subset"
-  results_dir: "/kaggle/working/results/kaggle_v1"
   csv_name: "DL_info.csv"
 
+results:
+  dir: "/kaggle/working/results/kaggle_v1"
+
 data:
-  split: "test"
-  max_samples: 5000
+  max_samples: 5000    
 
 preprocess:
-  input_size: 224
-  normalize: "clip"
-  use_ct3ch: true
+  ct_windows:
+    - [-600, 1500]
+    - [40, 400]
+    - [400, 1500]
+  size: 224
+  clip_norm: true
 
-model:
-  backend: "openclip"
-  image_encoder: "ViT-B/16"
-  text_encoder: "ViT-B/16"
+encoder:
+  name: "ViT-B-16"
   pretrained: "openai"
-  embed_dim: 512
-  dtype: "fp16"
+  freeze: true
 
 index:
   kind: "flat"
   metric: "ip"
-  nlist: 4096
-  nprobe: 16
-
-retrieval:
-  k: 10
-  group_by_study: true
-  eval_topk_build: 100
-
-cam:
-  method: "vit_gradcam"
-  threshold: 0.5
-  input_size: 224
-  alpha: 0.5
 
 phrases:
   set:
@@ -50,6 +35,7 @@ phrases:
     - "lung nodule"
     - "enlarged lymph node"
     - "bone lesion"
+
 
 viz:
   panel_rows: 3

@@ -15,6 +15,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# packaging
+*.egg-info/
+
 # local config (keep yours out of git)
 configs/local.yaml
 
@@ -24,6 +27,15 @@ results/
 *.npz
 *.parquet
 *.faiss*
+
+# allow repo assets and example CSVs
+# (override the broad ignores below, if any)
+!assets/
+!assets/*.png
+!phrases/
+!phrases/*.csv
+
+# images/figures created during runs (keep out by default)
 *.png
 *.gif
 *.csv

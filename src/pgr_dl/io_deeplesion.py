@@ -31,12 +31,12 @@ def _parse_bbox_row(r: pd.Series) -> Optional[Tuple[int, int, int, int]]:
     return None
 
 
-def load_metadata(root: str, csv_name: str = "metadata.csv") -> pd.DataFrame:
+def load_metadata(root: str, csv_name: str = "DL_info.csv") -> pd.DataFrame:
     """
     Load Kaggle DeepLesion subset metadata.
 
     Expected (after normalization):
-      study_id, slice_idx, img_path, body_part?, lesion_type?, bbox_*?, split?
+        study_id, slice_idx, img_path, body_part?, lesion_type?, bbox_*?, split?
     """
     root_path = Path(root)
     csv_path = root_path / csv_name
@@ -158,3 +158,4 @@ def load_slice(img_path: str) -> np.ndarray:
             return np.array(im, dtype=np.uint8)
         # fallback: convert to grayscale
         return np.array(im.convert("L"), dtype=np.uint8)
+    

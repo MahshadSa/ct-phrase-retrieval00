@@ -96,7 +96,6 @@ def neighbor_indices(center_idx: int, radius: int) -> List[int]:
     r = _valid_window(radius)
     return list(range(center_idx - r, center_idx + r + 1))
 
-
 def load_cine(
     meta: pd.DataFrame,
     study_id: str,
@@ -117,18 +116,18 @@ def load_cine(
     if sub.empty:
         return []
 
-    wanted = set(neighbor_indices(anchor_slice, radius))
-    frames: List[np.ndarray] = []
-    for _, r in sub.iterrows():
-        sidx = int(r["slice_idx"])
-        if sidx in wanted:
-            img = io.load_slice(str(r["img_path"]))
-            frames.append(windowing.ct3ch(img))  # HxWx3 uint8
-    frames.sort(key=lambda x: x.shape[0] * 10_000 + x.shape[1])  # stable op; not critical
-    # Ensure input order by slice index
-    frames = [f for _, f in sorted(zip([int(r["slice_idx"]) for _, r in sub.iterrows() if int(r["slice_idx"]) in wanted], frames))]
-    return frames
+    wanted = sorted(set(range(int(anchor_slice) - radius, int(anchor_slice) + radius + 1)))
+    # Build a dict: slice_idx -> path
+    path_by_slice = {int(r["slice_idx"]): str(r["img_path"]) for _, r in sub.iterrows()}
 
+    frames: List[np.ndarray] = []
+    for sidx in wanted:
+        p = path_by_slice.get(sidx, None)
+        if p is None:
+            continue
+        img = io.load_slice(p)
+        frames.append(windowing.ct3ch(img))  # HxWx3 uint8
+    return frames
 
 def overlay_cine_with_cam(
     cine_rgb: Sequence[np.ndarray],

@@ -103,34 +103,4 @@ def to_device(x: torch.Tensor, device: torch.device) -> torch.Tensor:
     return x.to(device, non_blocking=True)
 
 
-def make_encoder(cfg: Dict[str, Any]) -> Any:
-    """Create encoder from cfg['model'] + cfg['runtime']."""
-    from pgr import encoders as _enc
 
-    m = {k.lower(): v for k, v in cfg.get("model", {}).items()}
-    backend = str(m.get("backend", "openclip")).lower()
-    model_name = str(m.get("image_encoder", "ViT-B/16")).replace("ViT-B-16", "ViT-B/16")
-    pretrained = str(m.get("pretrained", "openai"))
-    dtype_str = str(m.get("dtype", "fp16")).lower()
-    device = get_device(cfg.get("runtime", {}).get("device"))
-
-    if dtype_str == "fp16":
-        dtype = torch.float16
-    elif dtype_str == "bf16":
-        dtype = torch.bfloat16
-    else:
-        dtype = torch.float32
-
-    enc = (
-        _enc.BiomedClipEncoder(device=str(device), dtype=dtype)  # type: ignore[attr-defined]
-        if backend == "biomedclip"
-        else _enc.ClipEncoder(model_name=model_name, pretrained=pretrained, device=str(device), dtype=dtype)
-    )
-
-    if "embed_dim" in m:
-        declared = int(m["embed_dim"])
-        if declared != enc.embed_dim:
-            get_logger().warning(
-                f"Config embed_dim={declared} differs from model embed_dim={enc.embed_dim}. Using model value."
-            )
-    return enc

@@ -8,3 +8,7 @@ version = "0.0.1"
 description = "Phrase-Grounded Retrieval Panel for CT (DeepLesion)"
 requires-python = ">=3.10"
 dependencies = []
+
+[project.scripts]
+ctpr-query = "apps.query:main"
+ctpr-eval = "apps.evaluate:main"

@@ -95,8 +95,8 @@ class FaissIndex:
             self._index.add(X)
             self._ext_ids = ids if ids is not None else None
 
-    def search(self, Q: np.ndarray, k: int = 10) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
-        """Q (B,D) → scores (B,k), I (B,k), ext (B,k|None). IP path L2-normalizes."""
+    def search(self, Q: np.ndarray, k: int = 10) -> Tuple[np.ndarray, np.ndarray]:
+        """Q (B,D) → (I (B,k), scores (B,k)). IP path L2-normalizes."""
         if Q.ndim != 2 or Q.shape[1] != self.dim:
             raise ValueError(f"Q must be (B,{self.dim})")
         Q = Q.astype(np.float32, copy=False)
@@ -105,13 +105,8 @@ class FaissIndex:
         if isinstance(self._index, faiss.IndexIVF):
             self._index.nprobe = self.nprobe
         scores, I = self._index.search(Q, int(k))
-        ext: Optional[np.ndarray] = None
-        if self._ext_ids is not None:
-            ext = np.full(I.shape, None, dtype=object)
-            valid = I >= 0
-            if valid.any():
-                ext[valid] = self._ext_ids[I[valid]]
-        return scores, I, ext
+        return I, scores
+
 
     def save(self, path: str | os.PathLike, ext_ids_path: Optional[str | os.PathLike] = None) -> None:
         """Save index to path; external ids to path or path+'.ext_ids.npy'."""

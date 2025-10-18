@@ -6,7 +6,6 @@ import numpy as np
 from PIL import Image
 
 
-# ---------- small helpers ----------
 
 def _pick(df: pd.DataFrame, *cands: str) -> str | None:
     cols = {c.lower(): c for c in df.columns}
@@ -43,7 +42,6 @@ def _split_study_and_file(name: str) -> tuple[str, str]:
     return "", s
 
 
-# ---------- path resolution ----------
 
 def _resolve_image_path(root: Path, name_or_rel: str) -> Path:
     p = Path(name_or_rel)
@@ -82,82 +80,28 @@ def _resolve_image_path(root: Path, name_or_rel: str) -> Path:
     return root / p.name
 
 
-# ---------- public API ----------
+
+from pathlib import Path
+import os
+import pandas as pd
 
 def load_metadata(root: str | Path, csv_name: str = "DL_info.csv") -> pd.DataFrame:
     """
-    Normalize DeepLesion CSV to:
-      - study_id : str   (e.g., "001274_01_02")
-      - slice_idx: int   (e.g., 43)
-      - img_path : str   (absolute PNG path)
+    Load DeepLesion-style metadata with a Kaggle-safe CSV override.
     """
     root = Path(root)
+    csv_name = os.getenv("PGR_DL_CSV_NAME", csv_name)
     csv_path = root / csv_name
     if not csv_path.exists():
-        raise FileNotFoundError(f"DeepLesion CSV not found: {csv_path}")
-
+        raise FileNotFoundError(
+            f"Metadata CSV not found: {csv_path}\n"
+            "Tip: In Kaggle, add your dataset in the sidebar and ensure "
+            "configs/deeplesion_kaggle.yaml -> paths.csv_name matches the file name."
+        )
     df = pd.read_csv(csv_path)
-    if df.empty:
-        raise ValueError(f"{csv_path.name} is empty")
-
-    df = df.rename(columns={c: c.strip().lower() for c in df.columns})
-
-    patient_col = _pick(df, "patient_index", "patientid", "patient_id")
-    study_col   = _pick(df, "study_index", "studyid", "study_id", "series_uid", "study_uid", "seriesid", "studyuid")
-    slice_col   = _pick(df, "slice_idx", "slice_index", "slice", "instance_number", "image_index", "imagenumber", "z_index")
-    file_col    = _pick(df, "file_name", "filename", "png_name", "image_path", "path", "png_path", "png")
-
-    # study_id
-    if patient_col is not None and study_col is not None:
-        study_id = df[patient_col].astype(str).str.strip() + "_" + df[study_col].astype(str).str.strip()
-    elif study_col is not None:
-        study_id = df[study_col].astype(str).str.strip()
-    elif patient_col is not None:
-        study_id = df[patient_col].astype(str).str.strip()
-    elif file_col is not None:
-        study_id = df[file_col].astype(str).apply(lambda p: Path(p).parent.name or "unknown")
-    else:
-        study_id = pd.Series(["unknown"] * len(df), index=df.index, dtype="string")
-    study_id = study_id.astype("string")
-
-    # slice_idx
-    if slice_col is not None:
-        slice_idx = _coerce_int(df[slice_col])
-    else:
-        if file_col is None:
-            raise ValueError("Could not infer 'slice_idx' (no slice-like column and no file/path column).")
-        slice_idx = df[file_col].apply(_extract_int_from_name).astype("Int64")
-
-    if slice_idx.isna().any() and file_col is not None:
-        fill = df[file_col][slice_idx.isna()].apply(_extract_int_from_name).astype("Int64")
-        slice_idx.loc[fill.index] = fill
-
-    if slice_idx.isna().all():
-        raise ValueError("Failed to construct 'slice_idx' from CSV.")
-
-    # absolute img_path
-    if file_col is not None:
-        paths = df[file_col].astype(str).apply(lambda p: str(_resolve_image_path(root, p)))
-    else:
-        # fallback: use zero-padded slices under detected roots
-        names = slice_idx.fillna(0).astype(int).astype(str).str.zfill(3) + ".png"
-        paths = names.apply(lambda s: str(_resolve_image_path(root, s)))
-
-    out = pd.DataFrame({
-        "study_id": study_id,
-        "slice_idx": slice_idx.astype("Int64"),
-        "img_path": paths.astype("string"),
-    })
-
-    for extra in ("body_part", "lesion_type", "split"):
-        if extra in df.columns:
-            out[extra] = df[extra].astype("string")
-
-    exists = out["img_path"].apply(lambda p: os.path.exists(p))
-    if exists.any():
-        out = out[exists].reset_index(drop=True)
-
-    return out
+    if "split" not in df.columns:
+        df["split"] = "all"
+    return df
 
 
 def load_slice(path: str | Path) -> np.ndarray:

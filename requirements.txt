@@ -1,12 +1,9 @@
-torch>=2.1
-torchvision>=0.16
-faiss-cpu
+# Keep it minimal; rely on Kaggle’s preinstalled torch, numpy, matplotlib, sklearn
+faiss-cpu>=1.7.4
 open-clip-torch>=2.24
 pydicom>=2.4
 pandas>=2.0
 pyyaml>=6.0
 tqdm>=4.66
 Pillow>=10.0
-matplotlib>=3.8
 scikit-image>=0.22
-scikit-learn>=1.4

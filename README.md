@@ -6,14 +6,14 @@ Mini demo: **phrase‑grounded retrieval for CT slices** on a tiny DeepLesion su
 
 ---
 
-## Quickstart (Kaggle, ~5 minutes)
+## Quickstart (Kaggle)
 
 ```bash
-# 1) Install (avoid pinning numpy on Kaggle)
+# 1) Install 
 pip install -r requirements.txt
 pip install -e .
 
-# 2) Verify the dataset mount (adjust if you used a different name/file)
+# 2) Verify the dataset mount
 python - <<'PY'
 from pathlib import Path
 p = Path('/kaggle/input/nih-deeplesion-subset/DL_info.csv')

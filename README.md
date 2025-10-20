@@ -66,33 +66,24 @@ paths:
 ## Repo structure
 
 ```
-configs/    # YAML (Kaggle‑friendly)
-notebooks/  # 00_build_index_dl.ipynb, 01_query_panel.ipynb, 02_eval_recallk.ipynb
-scripts/    # build_index.py (headless pipeline)
+configs/  # YAML (Kaggle‑friendly)
+notebooks/ # 00_build_index_dl.ipynb, 01_query_panel.ipynb, 02_eval_recallk.ipynb
+scripts/ # build_index.py (headless pipeline)
 src/
-  pgr/      # encoders, FAISS wrapper, CAM, viz, utils
-  pgr_dl/   # DeepLesion glue: I/O, windowing, phrase bank, eval helpers
-apps/       # CLI tools: query.py, evaluate.py
-phrases/    # (optional) example_phrases.csv
-results/    # artifacts (gitignored)
-assets/     # (optional) thumbnails for README
+  pgr/ # encoders, FAISS wrapper, CAM, viz, utils
+  pgr_dl/  # DeepLesion glue: I/O, windowing, phrase bank, eval helpers
+apps/   # CLI tools: query.py, evaluate.py
+phrases/  # example_phrases.csv
+results/  # artifacts 
 ```
 
 ---
 
-## Results (thumbnail)
+## Results 
 
-After a run, save a sample panel to:
 
-```
-assets/results_panel.png
-```
 
-Then it renders here:
 
-![Top‑9 panel for "liver lesion"](assets/results_panel.png)
-
----
 
 ## CLIP Results
 
@@ -102,11 +93,11 @@ Running `scripts/build_index_clip.py` with `encoder.limit_n = 512` produced:
 
 ```
 /kaggle/working/results/kaggle_clip/
- ├── index.faiss            # FAISS Flat/IP index
- ├── image_embs.npy         # (n=512, dim=512) ViT-B/16 embeddings
- ├── ids.parquet            # slice ↔ file mapping
- ├── manifest.json          # {"n":512, "dim":512, "metric":"ip", "kind":"flat"}
- └── panel_<phrase>.csv     # top-k ranked slices (zero-shot, semantic)
+ ├── index.faiss    # FAISS Flat/IP index
+ ├── image_embs.npy    # (n=512, dim=512) ViT-B/16 embeddings
+ ├── ids.parquet # slice ↔ file mapping
+ ├── manifest.json    # {"n":512, "dim":512, "metric":"ip", "kind":"flat"}
+ └── panel_<phrase>.csv   # top-k ranked slices (zero-shot, semantic)
 ```
 
 ---
@@ -121,7 +112,7 @@ Running `scripts/build_index_clip.py` with `encoder.limit_n = 512` produced:
 
 **Next I would add:**
 
-* IVF‑PQ index for scale, plus saliency‑aware re‑ranking.
+* IVF‑PQ index for scale
 * Organ‑specific phrase banks and harder negatives.
 * A proper grounding head (e.g., ViT token maps or a tiny detector) and basic pointing‑accuracy metrics.
 
@@ -146,10 +137,10 @@ MIT — see [LICENSE](LICENSE)
 ```
 /kaggle/working/results/kaggle_v1/
  ├── index.faiss
- ├── image_embs.npy           # (n≈512, dim=256 in offline toy run)
+ ├── image_embs.npy   # (n≈512, dim=256 in offline toy run)
  ├── ids.parquet
- ├── panel_<phrase>.csv       # top-k hits for a query phrase
- └── manifest.json            # {"n":512,"dim":256,"metric":"ip","kind":"flat"}
+ ├── panel_<phrase>.csv  # top-k hits for a query phrase
+ └── manifest.json  # {"n":512,"dim":256,"metric":"ip","kind":"flat"}
 ```
 
 ---
@@ -167,10 +158,10 @@ python scripts/build_index_clip.py --config configs/deeplesion_kaggle.yaml
 ```
 /kaggle/working/results/kaggle_clip/
  ├── index.faiss
- ├── image_embs.npy     # n=512, dim=512 (ViT-B/16)
+ ├── image_embs.npy # n=512, dim=512 (ViT-B/16)
  ├── ids.parquet
  ├── panel_<phrase>.csv
- └── manifest.json      # {"n":512,"dim":512,"metric":"ip","kind":"flat",...}
+ └── manifest.json   # {"n":512,"dim":512,"metric":"ip","kind":"flat",...}
 ```
 
 **Reproduce**

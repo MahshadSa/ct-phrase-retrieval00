@@ -81,9 +81,11 @@ results/  # artifacts
 
 ## Results 
 
-
-
-
+---
+## Lessons learned
+The kaggle dataset names and columns created errors. Explore everydataset first. Had to rewrite io_deeplesion multiple times.
+Check the packages defaluts on kaggle.
+Do not overcomplicate the codes, it will be hard to debug.
 
 ## CLIP Results
 
